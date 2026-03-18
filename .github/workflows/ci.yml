@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: ${{ runner.os }}-pip-
+
+      - name: Install build & test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          # Install runtime requirements if present (no-fail to allow empty file)
+          pip install -r requirements.txt || true
+          # Install the project package (src/ layout) so tests can import haleon_assistant
+          pip install -e .
+          # Test & lint tools
+          pip install pytest pytest-cov pytest-asyncio httpx ruff autoflake
+
+      - name: Lint (ruff) — fail on issues
+        run: |
+          # Run ruff to surface unused imports and other lint problems
+          ruff check . || (echo "Lint failures detected. Run 'ruff --fix .' and/or 'autoflake --in-place --remove-all-unused-imports -r .' locally to fix automatically." && exit 1)
+
+      - name: Auto-fix unused imports (attempt)
+        if: ${{ always() }}
+        run: |
+          # Attempt to auto-fix common unused import issues
+          ruff --fix .
+          autoflake --in-place --remove-all-unused-imports -r .
+
+      - name: Run tests
+        run: |
+          set -o pipefail
+          pytest --cov=src/haleon_assistant --cov-report=xml -v | tee pytest.log
+        env:
+          CI: true
+
+      - name: Upload test logs & coverage
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-artifacts
+          path: |
+            pytest.log
+            coverage.xml
