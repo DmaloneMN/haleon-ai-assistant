@@ -1,3 +1,8 @@
+# CI workflow for haleon-ai-assistant
+# - installs the package (editable) so tests can import src/ package
+# - runs ruff as a linter (only on existing targets)
+# - attempts safe auto-fixes (ruff format + autoflake) but keeps check strict
+# - runs pytest and treats "no tests collected" (exit code 5) as success (defensive)
 name: CI
 
 on:
@@ -19,7 +24,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
       - name: Cache pip
         uses: actions/cache@v4
@@ -31,8 +36,11 @@ jobs:
       - name: Install build & test dependencies
         run: |
           python -m pip install --upgrade pip
+          # install runtime requirements if present (allow missing file)
           pip install -r requirements.txt || true
+          # install the project package (src/ layout) so tests can import haleon_assistant
           pip install -e .
+          # test & lint tools
           pip install pytest pytest-cov pytest-asyncio httpx ruff autoflake
 
       - name: Lint (ruff) — run only on existing targets
@@ -43,17 +51,28 @@ jobs:
             TARGETS="$TARGETS tests"
           fi
           echo "Linting targets: $TARGETS"
-          ruff check $TARGETS || (echo "Lint failures detected. Run 'ruff --fix .' and/or 'autoflake --in-place --remove-all-unused-imports -r .' locally to fix automatically." && exit 1)
+          # Use ruff check (no unsupported flags). Fail on issues.
+          ruff check $TARGETS || (echo "Ruff lint failures detected. Run 'ruff format $TARGETS' and/or 'autoflake --in-place --remove-all-unused-imports -r $TARGETS' locally to fix automatically." && exit 1)
 
-      - name: Auto-fix common lint issues (attempt)
+      - name: Auto-fix common lint issues (safe commands)
         if: ${{ always() }}
         run: |
-          ruff --fix .
-          autoflake --in-place --remove-all-unused-imports -r .
+          TARGETS="src"
+          if [ -d "tests" ]; then
+            TARGETS="$TARGETS tests"
+          fi
+          echo "Attempting auto-fixes on: $TARGETS"
+          # Auto-format Python code (safe)
+          ruff format $TARGETS || echo "ruff format failed or is not available; skipping format"
+          # Remove unused imports using autoflake
+          autoflake --in-place --remove-all-unused-imports -r $TARGETS || echo "autoflake failed or is not available; skipping unused-import removal"
+          # Show remaining lint problems (non-fatal here; the check already enforces)
+          ruff check $TARGETS || true
 
       - name: Run tests (allow no-tests to be non-fatal)
         run: |
           set -o pipefail
+          # Run pytest and capture output
           pytest --cov=src/haleon_assistant --cov-report=xml -v 2>&1 | tee pytest.log
           status=${PIPESTATUS[0]}
           if [ "$status" -eq 5 ]; then
