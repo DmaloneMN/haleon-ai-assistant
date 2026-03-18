@@ -1,4 +1,7 @@
 name: CI
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 on:
   push:
@@ -11,6 +14,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
 
     steps:
       - name: Check out repository
@@ -19,7 +23,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
       - name: Cache pip
         uses: actions/cache@v4
@@ -33,7 +37,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt || true
           pip install -e .
-          pip install pytest pytest-cov pytest-asyncio httpx ruff autoflake
+          # Upgrade ruff to ensure format is available and consistent
+          pip install -U ruff
+          pip install pytest pytest-cov pytest-asyncio httpx autoflake
 
       - name: Lint (ruff) — run only on existing targets
         run: |
@@ -43,13 +49,23 @@ jobs:
             TARGETS="$TARGETS tests"
           fi
           echo "Linting targets: $TARGETS"
-          ruff check $TARGETS || (echo "Lint failures detected. Run 'ruff --fix .' and/or 'autoflake --in-place --remove-all-unused-imports -r .' locally to fix automatically." && exit 1)
+          # Use ruff check (no unsupported flags). Fail on issues.
+          ruff check $TARGETS || (echo "Ruff lint failures detected. Run 'ruff format $TARGETS' and/or 'autoflake --in-place --remove-all-unused-imports -r $TARGETS' locally to fix automatically." && exit 1)
 
-      - name: Auto-fix common lint issues (attempt)
+      - name: Auto-fix common lint issues (safe commands)
         if: ${{ always() }}
         run: |
-          ruff --fix .
-          autoflake --in-place --remove-all-unused-imports -r .
+          TARGETS="src"
+          if [ -d "tests" ]; then
+            TARGETS="$TARGETS tests"
+          fi
+          echo "Attempting auto-fixes on: $TARGETS"
+          # Use the supported auto-format command (ruff format).
+          ruff format $TARGETS || echo "ruff format failed or is not available; skipping format"
+          # Remove unused imports using autoflake
+          autoflake --in-place --remove-all-unused-imports -r $TARGETS || echo "autoflake failed or is not available; skipping unused-import removal"
+          # Re-run the lint check to show remaining issues (non-fatal here)
+          ruff check $TARGETS || true
 
       - name: Run tests (allow no-tests to be non-fatal)
         run: |
