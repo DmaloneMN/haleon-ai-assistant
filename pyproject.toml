@@ -16,6 +16,7 @@ dependencies = [
     "azure-identity",
     "azure-keyvault-secrets",
     "azure-storage-blob",
+    "openai>=1.0.0",
     "redis",
     "python-dotenv",
     "uvicorn",

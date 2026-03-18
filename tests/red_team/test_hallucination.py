@@ -31,5 +31,7 @@ def test_out_of_scope_question(client):
     assert response.status_code == 200
     data = response.json()
     answer = data["answer"].lower()
-    # The stub answer should not invent product dosage information
-    assert "dosage" not in answer or "don't have" in answer or "consult" in answer
+    # The stub answer must not invent product dosage information
+    assert "dosage" not in answer, "Answer should not fabricate dosage details for out-of-scope question"
+    # The stub answer should direct users to authoritative sources
+    assert "consult" in answer or "don't have" in answer or "information" in answer

@@ -27,8 +27,7 @@ _ADVERSE_KEYWORDS = frozenset(
 _INTENT_KEYWORDS: dict[str, tuple[str, ...]] = {
     "pharmacovigilance": tuple(_ADVERSE_KEYWORDS),
     "dosage": ("dose", "dosage", "how much", "how many", "mg", "milligram", "tablet"),
-    # "side effect" removed to avoid overlap; PV intent takes priority via dict ordering
-    "side_effects": ("caution", "warning", "contraindication"),
+    "warnings": ("caution", "warning", "contraindication"),
     "product_info": ("ingredient", "active", "composition", "contain", "formula", "what is"),
 }
 
