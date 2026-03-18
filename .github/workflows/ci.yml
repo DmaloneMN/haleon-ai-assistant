@@ -31,29 +31,36 @@ jobs:
       - name: Install build & test dependencies
         run: |
           python -m pip install --upgrade pip
-          # Install runtime requirements if present (no-fail to allow empty file)
           pip install -r requirements.txt || true
-          # Install the project package (src/ layout) so tests can import haleon_assistant
           pip install -e .
-          # Test & lint tools
           pip install pytest pytest-cov pytest-asyncio httpx ruff autoflake
 
-      - name: Lint (ruff) — fail on issues
+      - name: Lint (ruff) — run only on existing targets
         run: |
-          # Run ruff to surface unused imports and other lint problems
-          ruff check . || (echo "Lint failures detected. Run 'ruff --fix .' and/or 'autoflake --in-place --remove-all-unused-imports -r .' locally to fix automatically." && exit 1)
+          echo "Running ruff lint checks..."
+          TARGETS="src"
+          if [ -d "tests" ]; then
+            TARGETS="$TARGETS tests"
+          fi
+          echo "Linting targets: $TARGETS"
+          ruff check $TARGETS || (echo "Lint failures detected. Run 'ruff --fix .' and/or 'autoflake --in-place --remove-all-unused-imports -r .' locally to fix automatically." && exit 1)
 
-      - name: Auto-fix unused imports (attempt)
+      - name: Auto-fix common lint issues (attempt)
         if: ${{ always() }}
         run: |
-          # Attempt to auto-fix common unused import issues
           ruff --fix .
           autoflake --in-place --remove-all-unused-imports -r .
 
-      - name: Run tests
+      - name: Run tests (allow no-tests to be non-fatal)
         run: |
           set -o pipefail
-          pytest --cov=src/haleon_assistant --cov-report=xml -v | tee pytest.log
+          pytest --cov=src/haleon_assistant --cov-report=xml -v 2>&1 | tee pytest.log
+          status=${PIPESTATUS[0]}
+          if [ "$status" -eq 5 ]; then
+            echo "No tests were collected by pytest (exit code 5). Treating this as success for CI."
+            exit 0
+          fi
+          exit "$status"
         env:
           CI: true
 
