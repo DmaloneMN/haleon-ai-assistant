@@ -1,0 +1,14 @@
+Pharmacovigilance rules for the Haleon AI Assistant:
+
+1. Detect adverse event (AE) signals in user queries.
+2. If an AE is detected, acknowledge it and direct the user to the official
+   Haleon adverse event reporting portal.
+3. Never attempt to assess causality; defer to a qualified healthcare professional.
+4. Collect the following minimum dataset if the user consents:
+   - Product name and batch number (if known)
+   - Suspected adverse reaction description
+   - Patient age group
+   - Reporter details (name and contact optional)
+5. Log all potential AE interactions for regulatory review.
+
+TODO: integrate with the PV database submission API.

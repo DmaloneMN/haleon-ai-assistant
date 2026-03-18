@@ -1,11 +1,2 @@
-autogen-ext[azure,openai]
-autogen-agentchat
-fastapi[standard]
-azure-search-documents>=11.4.0
-azure-ai-contentsafety
-azure-identity
-azure-keyvault-secrets
-azure-storage-blob
-redis
-python-dotenv
-uvicorn
+# Runtime requirements are specified in pyproject.toml.
+# This file is intentionally minimal; install with: pip install -e .[test]
