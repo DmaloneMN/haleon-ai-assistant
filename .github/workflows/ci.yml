@@ -60,11 +60,19 @@ jobs:
             TARGETS="$TARGETS tests"
           fi
           echo "Attempting auto-fixes on: $TARGETS"
+<<<<<<< HEAD
           # Use the supported auto-format command (ruff format).
           ruff format $TARGETS || echo "ruff format failed or is not available; skipping format"
           # Remove unused imports using autoflake
           autoflake --in-place --remove-all-unused-imports -r $TARGETS || echo "autoflake failed or is not available; skipping unused-import removal"
           # Re-run the lint check to show remaining issues (non-fatal here)
+=======
+          # Use supported auto-format command
+          ruff format $TARGETS || echo "ruff format failed or is not available; skipping format"
+          # Remove unused imports using autoflake
+          autoflake --in-place --remove-all-unused-imports -r $TARGETS || echo "autoflake failed or is not available; skipping unused-import removal"
+          # Show remaining lint problems (non-fatal here; the check step enforces)
+>>>>>>> origin/main
           ruff check $TARGETS || true
 
       - name: Run tests (allow no-tests to be non-fatal)

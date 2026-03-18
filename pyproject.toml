@@ -3,22 +3,25 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "haleon-ai-assistant"
-version = "0.1.0"
-description = "Haleon AI Assistant powered by AutoGen and Azure"
+name = "haleon-assistant"
+version = "0.0.0"
+description = "Haleon AI Assistant – stubs for further development"
 requires-python = ">=3.10"
 dependencies = [
-    "autogen-ext[azure,openai]",
-    "autogen-agentchat",
-    "fastapi[standard]",
-    "azure-search-documents>=11.4.0",
-    "azure-ai-contentsafety",
-    "azure-identity",
-    "azure-keyvault-secrets",
-    "azure-storage-blob",
-    "redis",
-    "python-dotenv",
-    "uvicorn",
+    "fastapi>=0.100",
+    "uvicorn[standard]",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-cov",
+    "pytest-asyncio",
+    "httpx",
+]
+dev = [
+    "ruff",
+    "autoflake",
 ]
 
 [project.scripts]
@@ -26,3 +29,9 @@ haleon-assistant = "haleon_assistant.main:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
