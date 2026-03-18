@@ -1,16 +1,19 @@
-# haleon-ai-assistant
+# Haleon AI Assistant
 
-AI-powered assistant built with [AutoGen](https://github.com/microsoft/autogen) and Azure services, exposed via a [FastAPI](https://fastapi.tiangolo.com/) HTTP interface.
+AI-powered healthcare assistant built with FastAPI and Azure services.
+All agent and tool implementations are **stubs** – see TODO comments throughout
+the codebase for where real logic must be added.
 
 ## Prerequisites
 
 - Python 3.10+
-- (Optional) Redis for session/cache support
+- (Optional) Redis for cache support
+- (Optional) Azure subscription for real AI services
 
 ## Quick start
 
 ```bash
-# Clone the repo (if you haven't already)
+# Clone the repo
 git clone https://github.com/DmaloneMN/haleon-ai-assistant.git
 cd haleon-ai-assistant
 
@@ -18,47 +21,61 @@ cd haleon-ai-assistant
 python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 
-# Install dependencies
-pip install -r requirements.txt
+# Install the package (editable) plus test dependencies
+pip install -e .[test]
 
 # Configure environment variables
 cp .env.example .env
-# Edit .env and fill in your Azure credentials
+# Edit .env and fill in your Azure credentials (optional for local dev)
 
 # Run the development server
-uvicorn src.haleon_assistant.main:app --reload
+uvicorn haleon_assistant.main:app --reload
 ```
 
 The API will be available at <http://localhost:8000>.  
 Interactive docs: <http://localhost:8000/docs>
 
+## Running tests
+
+```bash
+pytest -v
+```
+
+## Docker
+
+```bash
+docker-compose up --build
+```
+
 ## Project structure
 
 ```
 haleon-ai-assistant/
-├── src/
-│   └── haleon_assistant/
-│       ├── __init__.py
-│       └── main.py          # FastAPI app entry point
-├── .env.example             # Environment variable template
-├── .gitignore
-├── pyproject.toml           # Project metadata & build config
-├── requirements.txt         # Pinned/unpinned runtime dependencies
-└── README.md
+├── src/haleon_assistant/
+│   ├── __init__.py
+│   ├── main.py                  # FastAPI app entry point
+│   ├── api/
+│   │   ├── routes/              # health, chat, feedback routers
+│   │   └── middleware/          # auth, rate_limit middleware
+│   ├── agents/                  # triage, retrieval, safety, synthesis, PV
+│   ├── tools/                   # search, dosage, content_safety, cache
+│   ├── ingestion/               # chunker, embedder, indexer, pipeline
+│   └── prompts/                 # system prompt text files
+├── tests/
+│   ├── unit/                    # agent unit tests
+│   ├── integration/             # end-to-end FastAPI tests
+│   └── red_team/                # hallucination / jailbreak placeholders
+├── infra/                       # Bicep IaC templates
+├── docs/                        # Architecture and runbook
+├── Dockerfile
+├── docker-compose.yml
+└── pyproject.toml
 ```
 
-## Dependencies
+## Key dependencies
 
 | Package | Purpose |
-|---|---|
-| `autogen-ext[azure,openai]` | AutoGen Azure/OpenAI model integrations |
-| `autogen-agentchat` | Multi-agent chat orchestration |
-| `fastapi[standard]` | Web framework |
-| `azure-search-documents` | Azure AI Search client |
-| `azure-ai-contentsafety` | Content safety moderation |
-| `azure-identity` | Azure credential helpers |
-| `azure-keyvault-secrets` | Azure Key Vault secret access |
-| `azure-storage-blob` | Azure Blob Storage client |
-| `redis` | Redis client for caching/sessions |
-| `python-dotenv` | Load `.env` variables at runtime |
+|---------|---------|
+| `fastapi` | Web framework |
 | `uvicorn` | ASGI server |
+| `pytest` / `httpx` | Testing |
