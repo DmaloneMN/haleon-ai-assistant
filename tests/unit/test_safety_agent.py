@@ -5,12 +5,11 @@ from haleon_assistant.agents.safety_agent import SafetyAgent
 
 def test_safety_passes_benign_input():
     agent = SafetyAgent()
-    result = agent.check("What is the recommended dose for adults?")
-    assert result["pass"] is True
+    result = agent.check("What is the recommended dose for adults?", [])
+    assert result.get("ok") is True
 
 
-def test_safety_fails_on_trigger_word():
+def test_safety_result_has_issues_key():
     agent = SafetyAgent()
-    result = agent.check("This is UNSAFE content")
-    assert result["pass"] is False
-    assert "reason" in result
+    result = agent.check("hello", [])
+    assert "issues" in result

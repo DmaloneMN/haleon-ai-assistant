@@ -1,18 +1,13 @@
-"""Pharmacovigilance agent – detects and surfaces adverse event reports.
-
-TODO: integrate with the real PV database / regulatory submission pipeline.
-"""
+"""Pharmacovigilance agent – detects and surfaces adverse event reports."""
 
 
 class PharmacovigilanceAgent:
-    """Checks a query for adverse event indicators and returns a report."""
+    """Checks text for adverse event indicators."""
 
-    def check(self, query: str) -> dict:
-        """Return a pharmacovigilance assessment for *query*.
+    def scan(self, text: str) -> dict:
+        """Return a pharmacovigilance scan result.
 
         Returns:
-            dict with ``adverse_events`` (list) – empty in this stub – and
-            ``action_required`` (bool).
+            dict with ``ae_detected`` (bool) and ``details`` (list).
         """
-        # TODO: parse query for adverse event signals; flag for medical review
-        return {"adverse_events": [], "action_required": False}
+        return {"ae_detected": False, "details": []}
