@@ -1,0 +1,131 @@
+*** Begin Patch
+*** Add File: src/haleon_assistant/api/__init__.py
++"""
++API package for haleon_assistant.
++Contains route modules and middleware placeholders.
++"""
++
+*** End Patch
+*** Begin Patch
+*** Add File: src/haleon_assistant/api/routes/__init__.py
++"""
++Routes package.
++"""
++
+*** End Patch
+*** Begin Patch
+*** Add File: src/haleon_assistant/api/routes/health.py
++from fastapi import APIRouter
++import time
++
++router = APIRouter()
++
++@router.get("/health")
++async def health():
++    """Return a simple health response. Keep minimal for scaffold tests."""
++    return {"status": "ok", "timestamp": int(time.time())}
++
+*** End Patch
+*** Begin Patch
+*** Add File: src/haleon_assistant/api/routes/chat.py
++from fastapi import APIRouter
++from pydantic import BaseModel
++from typing import List
++
++from haleon_assistant.agents.orchestrator import Orchestrator
++
++router = APIRouter()
++
++
++class ChatRequest(BaseModel):
++    query: str
++
++
++class ChatResponse(BaseModel):
++    answer: str
++    citations: List[dict] = []
++
++
++@router.post("/chat", response_model=ChatResponse)
++async def chat_endpoint(req: ChatRequest):
++    """Simple chat endpoint that delegates to the Orchestrator stub."""
++    orch = Orchestrator()
++    result = orch.run(req.query)
++    answer = result.get("answer", "")
++    citations = result.get("citations", [])
++    return ChatResponse(answer=answer, citations=citations)
++
+*** End Patch
+*** Begin Patch
+*** Add File: src/haleon_assistant/api/routes/feedback.py
++from fastapi import APIRouter, status
++from pydantic import BaseModel
++
++router = APIRouter()
++
++
++class Feedback(BaseModel):
++    message_id: str | None = None
++    thumbs_up: bool | None = None
++    comment: str | None = None
++
++
++@router.post("/feedback", status_code=status.HTTP_202_ACCEPTED)
++async def feedback(payload: Feedback):
++    """Accept feedback (placeholder) and return 202 Accepted."""
++    # In a real implementation this would enqueue or store feedback.
++    return {"status": "accepted"}
++
+*** End Patch
+*** Begin Patch
+*** Add File: src/haleon_assistant/api/middleware/auth.py
++from fastapi import Request
++
++def validate_jwt(request: Request) -> bool:
++    """
++    Placeholder JWT validation: ensure Authorization header exists.
++    Full JWKS/OIDC validation should be added later.
++    """
++    auth = request.headers.get("authorization")
++    return bool(auth)
++
+*** End Patch
+*** Begin Patch
+*** Add File: src/haleon_assistant/api/middleware/rate_limit.py
++import time
++from collections import defaultdict
++
++_COUNTS = defaultdict(list)
++RATE_LIMIT = 60  # seconds window
++MAX_REQUESTS = 100
++
++def allow_request(key: str) -> bool:
++    """Very small in-memory rate limiter used only for local testing/scaffold."""
++    now = time.time()
++    window = [t for t in _COUNTS[key] if now - t < RATE_LIMIT]
++    _COUNTS[key] = window
++    if len(window) < MAX_REQUESTS:
++        _COUNTS[key].append(now)
++        return True
++    return False
++
+*** End Patch
+*** Begin Patch
+*** Add File: tests/integration/test_e2e_flow.py
++from fastapi.testclient import TestClient
++from haleon_assistant.main import app
++
++client = TestClient(app)
++
++def test_health_and_chat_endpoints():
++    # Health should respond OK
++    r = client.get("/api/v1/health")
++    assert r.status_code == 200
++
++    # Chat should respond with an answer field
++    j = client.post("/api/v1/chat", json={"query": "Tell me dosage"})
++    assert j.status_code == 200
++    data = j.json()
++    assert "answer" in data
++
+*** End Patch
