@@ -1,26 +1,16 @@
-"""Triage agent – classifies incoming queries to route them correctly.
-
-TODO: replace stub with a real LLM-based intent classifier.
-"""
+"""Triage agent – classifies incoming queries to route them correctly."""
 
 
 class TriageAgent:
-    """Classifies a query and returns a routing label."""
+    """Classifies a query and returns a routing dict."""
 
-    # Known routes
-    ROUTES = ("dosage", "side_effects", "pharmacovigilance", "general")
+    def classify(self, query: str) -> dict:
+        """Return intent dict for *query*.
 
-    def classify(self, query: str) -> str:
-        """Return a route string for *query*.
-
-        Current stub: keyword-based classification; replace with LLM call.
+        Returns ``{"intent": "dosage"}`` when dose-related keywords are present,
+        otherwise ``{"intent": "general"}``.
         """
-        q = query.lower()
-        # Check pharmacovigilance first (has overlapping terms with side_effects)
-        if any(w in q for w in ("report", "pharmacovigilance", "pv")):
-            return "pharmacovigilance"
-        if any(w in q for w in ("dose", "dosage", "how much", "mg")):
-            return "dosage"
-        if any(w in q for w in ("side effect", "adverse", "reaction")):
-            return "side_effects"
-        return "general"
+        lower = query.lower()
+        if "dose" in lower or "dosage" in lower:
+            return {"intent": "dosage"}
+        return {"intent": "general"}

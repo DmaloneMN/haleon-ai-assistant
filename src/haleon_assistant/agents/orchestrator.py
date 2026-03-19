@@ -1,7 +1,4 @@
-"""Orchestrator – coordinates all sub-agents to answer a user query.
-
-TODO: replace stub calls with real AutoGen / Azure OpenAI agent invocations.
-"""
+"""Orchestrator – coordinates all sub-agents to answer a user query."""
 
 from haleon_assistant.agents.retrieval_agent import RetrievalAgent
 from haleon_assistant.agents.safety_agent import SafetyAgent
@@ -13,10 +10,10 @@ class Orchestrator:
     """Top-level orchestrator that wires triage → retrieval → safety → synthesis."""
 
     def __init__(self) -> None:
-        self._triage = TriageAgent()
-        self._retrieval = RetrievalAgent()
-        self._safety = SafetyAgent()
-        self._synthesis = SynthesisAgent()
+        self.triage = TriageAgent()
+        self.retrieval = RetrievalAgent()
+        self.safety = SafetyAgent()
+        self.synthesis = SynthesisAgent()
 
     def run(self, query: str) -> dict:
         """Run the full pipeline and return a result dict.
@@ -24,9 +21,10 @@ class Orchestrator:
         Returns:
             dict with keys ``answer`` (str) and ``citations`` (list).
         """
-        route = self._triage.classify(query)
-        documents = self._retrieval.retrieve(query, route=route)
-        safety_result = self._safety.check(query)
-        if not safety_result["pass"]:
-            return {"answer": "I cannot answer that query.", "citations": []}
-        return self._synthesis.compose(query, documents)
+        _route = self.triage.classify(query)
+        docs = self.retrieval.retrieve(query)
+        safe = self.safety.check(query, docs)
+        if not safe.get("ok", True):
+            return {"answer": "Content flagged by safety filters", "citations": []}
+        answer = self.synthesis.synthesize(query, docs)
+        return {"answer": answer, "citations": docs}
