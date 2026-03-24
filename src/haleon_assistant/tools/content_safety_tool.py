@@ -4,6 +4,21 @@ TODO: replace stub with real azure-ai-contentsafety SDK calls.
 """
 
 
+def check_content(text: str) -> dict:
+    """Basic scaffold safety check: flags empty or whitespace-only text as unsafe.
+
+    Args:
+        text: The text to check.
+
+    Returns:
+        dict with ``safe`` (bool) and ``issues`` (list of str flag names).
+    """
+    if not text or not text.strip():
+        return {"safe": False, "issues": ["empty_text"]}
+    # Always safe in scaffold for non-empty text
+    return {"safe": True, "issues": []}
+
+
 class ContentSafetyTool:
     """Placeholder wrapper around Azure AI Content Safety."""
 
