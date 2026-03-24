@@ -1,0 +1,112 @@
+*** Begin Patch
+*** Add File: src/haleon_assistant/tools/__init__.py
++"""
++Tools package for haleon_assistant.
++Contains small deterministic, in-memory helpers used by agents in the scaffold.
++"""
++
+*** End Patch
+*** Begin Patch
+*** Add File: src/haleon_assistant/tools/cache_tool.py
++class Cache:
++    """Simple in-memory cache useful for local testing (not persistent)."""
++
++    def __init__(self) -> None:
++        self._store = {}
++
++    def get(self, key: str):
++        return self._store.get(key)
++
++    def set(self, key: str, value):
++        self._store[key] = value
++
++    def delete(self, key: str):
++        if key in self._store:
++            del self._store[key]
++
+*** End Patch
+*** Begin Patch
+*** Add File: src/haleon_assistant/tools/search_tool.py
++class SearchTool:
++    """Deterministic, local search stub returning example documents."""
++
++    def search(self, query: str) -> list:
++        if not query:
++            return []
++        # Return predictable sample doc objects for tests
++        return [
++            {"id": "sample-1", "title": "Sample Doc 1", "text": f"Result for: {query}", "source": "local"}
++        ]
++
+*** End Patch
+*** Begin Patch
+*** Add File: src/haleon_assistant/tools/dosage_tool.py
++def lookup_dosage(product_id: str) -> dict:
++    """Return a minimal deterministic dosage record for a product id."""
++    if not product_id:
++        return {"product_id": product_id, "dosage": "unknown"}
++    # Simple mapping for scaffold/testing
++    return {"product_id": product_id, "dosage": "Follow label instructions (1 tablet)"}
++
+*** End Patch
+*** Begin Patch
+*** Add File: src/haleon_assistant/tools/content_safety_tool.py
++def check_content(text: str) -> dict:
++    """Basic scaffold safety check: flags empty text as unsafe, otherwise safe."""
++    if not text:
++        return {"safe": False, "issues": ["empty_text"]}
++    # Always safe in scaffold for non-empty text
++    return {"safe": True, "issues": []}
++
+*** End Patch
+*** Begin Patch
+*** Add File: tests/unit/test_cache_tool.py
++from haleon_assistant.tools.cache_tool import Cache
++
++
++def test_cache_set_get_delete():
++    c = Cache()
++    assert c.get("x") is None
++    c.set("x", 123)
++    assert c.get("x") == 123
++    c.delete("x")
++    assert c.get("x") is None
++
+*** End Patch
+*** Begin Patch
+*** Add File: tests/unit/test_search_tool.py
++from haleon_assistant.tools.search_tool import SearchTool
++
++
++def test_search_returns_results_for_query():
++    s = SearchTool()
++    results = s.search("aspirin")
++    assert isinstance(results, list)
++    assert len(results) == 1
++    assert "text" in results[0]
++
+*** End Patch
+*** Begin Patch
+*** Add File: tests/unit/test_dosage_tool.py
++from haleon_assistant.tools.dosage_tool import lookup_dosage
++
++
++def test_lookup_dosage_returns_structure():
++    r = lookup_dosage("prod-1")
++    assert isinstance(r, dict)
++    assert r.get("product_id") == "prod-1"
++    assert "dosage" in r
++
+*** End Patch
+*** Begin Patch
+*** Add File: tests/unit/test_content_safety_tool.py
++from haleon_assistant.tools.content_safety_tool import check_content
++
++
++def test_check_content_flags_empty_and_passes_text():
++    empty = check_content("")
++    assert empty.get("safe") is False
++    ok = check_content("This is a safe sentence.")
++    assert ok.get("safe") is True
++
+*** End Patch
