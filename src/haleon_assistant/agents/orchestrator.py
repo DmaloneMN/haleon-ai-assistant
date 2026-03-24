@@ -1,9 +1,9 @@
 from typing import Dict
 
-from haleon_assistant.agents.triage_agent import TriageAgent
 from haleon_assistant.agents.retrieval_agent import RetrievalAgent
 from haleon_assistant.agents.safety_agent import SafetyAgent
 from haleon_assistant.agents.synthesis_agent import SynthesisAgent
+from haleon_assistant.agents.triage_agent import TriageAgent
 
 
 class Orchestrator:
