@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import Dict, List
 
 from haleon_assistant.tools.content_safety_tool import check_content
 
