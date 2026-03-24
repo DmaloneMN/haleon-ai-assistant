@@ -79,3 +79,5 @@ haleon-ai-assistant/
 | `fastapi` | Web framework |
 | `uvicorn` | ASGI server |
 | `pytest` / `httpx` | Testing |
+
+<--body chore/update-readme: confirmed -->
