@@ -1,0 +1,190 @@
+*** Begin Patch
+*** Add File: src/haleon_assistant/ingestion/__init__.py
++"""
++Ingestion package: chunking, embedding, indexing, and a simple pipeline.
++These are deterministic, in-memory stubs for local development and tests.
++"""
++
+*** End Patch
+*** Begin Patch
+*** Add File: src/haleon_assistant/ingestion/chunker.py
++from typing import List
++
++
++def chunk_text(text: str, chunk_size: int = 500) -> List[str]:
++    """
++    Very small deterministic chunker: split text into contiguous chunks of
++    approximately chunk_size characters on whitespace boundaries.
++    """
++    if not text:
++        return []
++    words = text.split()
++    chunks: List[str] = []
++    current = []
++    current_len = 0
++    for w in words:
++        if current_len + len(w) + (1 if current else 0) > chunk_size:
++            chunks.append(" ".join(current))
++            current = [w]
++            current_len = len(w)
++        else:
++            current.append(w)
++            current_len += len(w) + (1 if current_len else 0)
++    if current:
++        chunks.append(" ".join(current))
++    return chunks
++
+*** End Patch
+*** Begin Patch
+*** Add File: src/haleon_assistant/ingestion/embedder.py
++from typing import List
++
++
++def embed(text: str, dim: int = 8) -> List[float]:
++    """
++    Deterministic pseudo-embedding using Python's hash.
++    Produces a small list of floats in range [0,1].
++    """
++    if text is None:
++        text = ""
++    h = abs(hash(text))
++    vec: List[float] = []
++    for i in range(dim):
++        # shift and mask to produce reproducible values
++        val = ((h >> (i * 8)) & 0xFF) / 255.0
++        vec.append(float(val))
++    return vec
++
+*** End Patch
+*** Begin Patch
+*** Add File: src/haleon_assistant/ingestion/indexer.py
++from typing import List, Dict
++
++# Simple in-memory index store used for scaffold/testing.
++_IN_MEMORY_INDEX: List[Dict] = []
++
++
++def index_documents(docs: List[Dict]) -> Dict:
++    """
++    Indexes documents into a global in-memory list and returns a summary.
++    Each doc should be a dict with at least 'text' and 'vector' keys.
++    """
++    count_before = len(_IN_MEMORY_INDEX)
++    for d in docs:
++        _IN_MEMORY_INDEX.append(d)
++    return {"indexed": len(docs), "total": len(_IN_MEMORY_INDEX), "before": count_before}
++
++
++def clear_index() -> None:
++    """Clear the in-memory index (useful for tests)."""
++    _IN_MEMORY_INDEX.clear()
++
+*** End Patch
+*** Begin Patch
+*** Add File: src/haleon_assistant/ingestion/pipeline.py
++from typing import Dict, List
++
++from haleon_assistant.ingestion.chunker import chunk_text
++from haleon_assistant.ingestion.embedder import embed
++from haleon_assistant.ingestion.indexer import index_documents
++
++
++def run_pipeline(doc_text: str) -> Dict:
++    """
++    Run the simple pipeline: chunk -> embed -> index.
++    Returns index_documents() result.
++    """
++    chunks: List[str] = chunk_text(doc_text)
++    docs = []
++    for i, c in enumerate(chunks):
++        docs.append({"id": f"chunk-{i}", "text": c, "vector": embed(c)})
++    return index_documents(docs)
++
+*** End Patch
+*** Begin Patch
+*** Add File: src/haleon_assistant/prompts/triage_system.txt
++Triage system prompt (scaffold)
++
++Classify the user intent into categories such as: dosage, pharmacovigilance, general.
++
+*** End Patch
+*** Begin Patch
+*** Add File: src/haleon_assistant/prompts/retrieval_system.txt
++Retrieval system prompt (scaffold)
++
++Describe how to find relevant documents and return snippets with metadata.
++
+*** End Patch
+*** Begin Patch
+*** Add File: src/haleon_assistant/prompts/synthesis_system.txt
++Synthesis system prompt (scaffold)
++
++Compose concise answers from provided snippets and include citations.
++
+*** End Patch
+*** Begin Patch
+*** Add File: src/haleon_assistant/prompts/safety_rules.txt
++Safety rules (scaffold)
++
++If content poses medical risk or contains disallowed content, mark as unsafe.
++
+*** End Patch
+*** Begin Patch
+*** Add File: src/haleon_assistant/prompts/pharmacovigilance_rules.txt
++Pharmacovigilance rules (scaffold)
++
++Check for mentions of adverse events and return structured detections.
++
+*** End Patch
+*** Begin Patch
+*** Add File: tests/unit/test_chunker.py
++from haleon_assistant.ingestion.chunker import chunk_text
++
++
++def test_chunker_splits_text():
++    text = "word " * 1200  # long text
++    chunks = chunk_text(text, chunk_size=200)
++    assert isinstance(chunks, list)
++    assert len(chunks) >= 1
++    # All chunks when joined produce the original words count (ignoring trailing spaces)
++    joined = " ".join(chunks).strip()
++    assert joined.count("word") == 1200
++
+*** End Patch
+*** Begin Patch
+*** Add File: tests/unit/test_embedder.py
++from haleon_assistant.ingestion.embedder import embed
++
++
++def test_embedder_is_deterministic():
++    v1 = embed("hello world", dim=8)
++    v2 = embed("hello world", dim=8)
++    assert v1 == v2
++    assert len(v1) == 8
++
+*** End Patch
+*** Begin Patch
+*** Add File: tests/unit/test_indexer.py
++from haleon_assistant.ingestion.indexer import index_documents, clear_index
++
++
++def test_indexer_counts_and_clear():
++    clear_index()
++    docs = [{"id": "a", "text": "t", "vector": [0.1]}]
++    res = index_documents(docs)
++    assert res.get("indexed") == 1
++    assert res.get("total") >= 1
++    clear_index()
++
+*** End Patch
+*** Begin Patch
+*** Add File: tests/unit/test_pipeline.py
++from haleon_assistant.ingestion.pipeline import run_pipeline
++
++
++def test_pipeline_runs_and_indexes():
++    res = run_pipeline("alpha beta gamma " * 100)
++    assert isinstance(res, dict)
++    assert res.get("indexed") >= 1
++
+*** End Patch
