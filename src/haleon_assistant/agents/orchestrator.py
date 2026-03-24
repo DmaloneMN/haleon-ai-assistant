@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import Dict
 
 from haleon_assistant.agents.triage_agent import TriageAgent
 from haleon_assistant.agents.retrieval_agent import RetrievalAgent

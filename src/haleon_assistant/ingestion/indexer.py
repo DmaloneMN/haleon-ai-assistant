@@ -28,4 +28,3 @@ class Indexer:
         TODO: call SearchClient.merge_or_upload_documents(documents)
         """
         # Stub: no-op until real Azure SDK integration is added
-        pass
