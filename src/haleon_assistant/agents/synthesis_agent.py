@@ -1,18 +1,13 @@
-"""Synthesis agent – composes the final answer with citations."""
+from typing import List
 
 
 class SynthesisAgent:
-    """Assembles a human-readable answer from retrieved documents."""
+    """Compose a short answer from retrieved document snippets."""
 
-    def synthesize(self, query: str, docs: list) -> str:
-        """Return a placeholder answer string concatenating doc snippets.
-
-        Args:
-            query: The user's original question.
-            docs:  List of citation dicts from the retrieval agent.
-
-        Returns:
-            Placeholder answer string.
-        """
-        snippets = " ".join(d.get("snippet", "") for d in docs)
-        return f"Answer (placeholder): based on sources. {snippets}"
+    def synthesize(self, query: str, docs: List[dict]) -> str:
+        snippets = [d.get("snippet", "") for d in docs if isinstance(d, dict)]
+        joined = " ".join(s for s in snippets if s)
+        base = f"Placeholder answer for: {query}" if query else "Placeholder answer"
+        if joined:
+            return f"{base}. Sources: {joined}"
+        return base

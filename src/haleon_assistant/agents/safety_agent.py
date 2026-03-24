@@ -1,12 +1,6 @@
-"""Safety agent – quick PII and toxicity checks."""
-
-
 class SafetyAgent:
-    """Runs lightweight safety checks on a query before it is processed."""
+    """Simple scaffold safety agent; always returns ok=True in this scaffold."""
 
     def check(self, query: str, docs: list) -> dict:
-        """Return a result dict with key ``ok`` (bool) and ``issues`` (list).
-
-        Current stub: always passes (scaffold placeholder).
-        """
+        # Real checks (PII, toxicity, medical risk) should be implemented later.
         return {"ok": True, "issues": []}
